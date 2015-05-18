@@ -50,5 +50,43 @@ function admin(req, res, next) {
 }
 
 function authenticateWithDatabase(user,pass,callback){
-    callback();
+    var err = null;
+    callback(err);
+}
+
+//A configurable logger middleware component for Connect
+function setup(format) {
+    //Setup function can be called multiple times with different configurations
+    //Logger  uses a regexp to match request properties
+    var regexp = /:(\w+)/g;
+    //Actual logger component that Connect will use
+    return function logger(req, res, next) {
+        //Use regexp to format log entry for request
+        var str = format.replace(regexp, function (match, property) {
+            return req[property];
+        });
+        //Print request log entry to console Pass control to next middleware component
+        console.log(str);
+        next();
+    }
+}
+//Directly export logger setup function
+module.exports = setup;
+
+//Error-handling middleware in Connect
+function errorHandler() {
+    var env = process.env.NODE_ENV || 'development';
+    return function (err, req, res, next) {
+        //Error-handling middleware defines four arguments
+        //errorHandler middleware component behaves differently depending on value of NODE_ENV
+        ￼￼    res.statusCode = 500;
+        switch (env) {
+            case 'development':
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(err));
+                break;
+            default:
+                res.end('Server error');
+        }
+    }
 }
